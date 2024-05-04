@@ -131,12 +131,28 @@ def import_data(infile, preload=True):
         )
         raw = mne.io.read_raw_eeglab(infile, preload=preload)
 
-    elif os.path.splitext(infile[1]) == ".con" or os.path.splitext(infile[1]) == ".sqd":
+    elif os.path.splitext(infile)[1] == ".con" or os.path.splitext(infile)[1] == ".sqd":
         logger.info(
             "Detected Ricoh/KIT file format, using: mne.io.read_raw_kit"
         )
-        raw = mne.io.read_raw_kit(infile, preload=preload)
-        
+        mrkfile = infile.replace("meg.con", "markers.mrk")
+
+        elpfile = infile.split("task")[0] + "acq-ELP_headshape.pos"
+        elp = np.loadtxt(elpfile, comments="%")
+        elp /= 1000.0 # Convert from mm to m otherwise decimation will be OOM
+
+        hspfile = infile.split("task")[0] + "acq-HSP_headshape.pos"
+        hsp = np.loadtxt(hspfile, comments="%")
+        hsp /= 1000.0 # Convert from mm to m otherwise decimation will be OOM
+
+        raw = mne.io.read_raw_kit(
+            infile,
+            mrk=mrkfile,
+            elp=elp,
+            hsp=hsp,
+            preload=preload
+        )
+
     # Other formats not accepted
     else:
         msg = "Unable to determine file type of input {0}".format(infile)
