@@ -65,7 +65,7 @@ def get_beamforming_filenames(subjects_dir, subject):
     if " " in basedir:
         raise ValueError("subjects_dir/src_dir cannot contain spaces.")
     os.makedirs(basedir, exist_ok=True)
-    
+
     filenames = {
         "basedir": basedir,
         "filters_file": op.join(basedir, "filters-lcmv.h5"),
@@ -917,8 +917,7 @@ def _compute_beamformer(G, Cm, reg, n_orient, weight_norm, pick_ori, reduce_rank
                     np.matmul(Gk.swapaxes(-2, -1).conj(), Cm_inv @ Cm_inv), Gk
                 )
 
-            ori_denom_inv = rhino_utils.jitter_inv(ori_denom, inv_func=_sym_inv_sm,
-                                                   args=(ori_denom, reduce_rank, inversion, sk))
+            ori_denom_inv = _sym_inv_sm(ori_denom, reduce_rank, inversion, sk)
             ori_pick = np.matmul(ori_denom_inv, ori_numer)
 
         # MWW
@@ -929,7 +928,7 @@ def _compute_beamformer(G, Cm, reg, n_orient, weight_norm, pick_ori, reduce_rank
             #
             # See eq 5 in Brookes et al, Optimising experimental design for MEG beamformer imaging, Neuroimage 2008
             # This optimises the orientation by maximising the power BEFORE any weight normalisation is performed
-            ori_pick = _sym_inv_sm(bf_denom, reduce_rank, inversion, sk)
+            ori_pick = rhino_utils.jitter_inv(bf_denom, inv_func=_sym_inv_sm, args=(reduce_rank, inversion, sk))
 
         assert ori_pick.shape == (n_sources, n_orient, n_orient)
 
