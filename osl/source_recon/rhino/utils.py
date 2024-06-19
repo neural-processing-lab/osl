@@ -1311,3 +1311,34 @@ def extract_rhino_files(old_subjects_dir, new_subjects_dir, subjects="all", excl
             log_or_print("******************************" + "*" * len(str(reportdir)))
             log_or_print(f"* REMEMBER TO CHECK REPORT: {reportdir} *")
             log_or_print("******************************" + "*" * len(str(reportdir)))
+
+
+def jitter_inv(x, args, inv_func, base_jit=1e-10, max_attempts=25):
+    """
+    Add minimal jitter to each 3x3 matrix in x to make them invertible.
+
+    Parameters:
+    - x: An nx3x3 numpy array.
+    - base_jitter: The base amount of jitter to add along the diagonal.
+    - max_attempts: The maximum number of attempts to make each matrix invertible.
+
+    Returns:
+    - A copy of x with jitter added to make all 3x3 matrices invertible.
+    """
+    jittered_x = x
+
+    # Identity matrix of shape (3, 3)
+    identity_matrix = np.eye(3)[np.newaxis, :, :]
+
+    for attempt in range(max_attempts):
+        try:
+            return inv_func(jittered_x, *args)
+        except ValueError as e:
+            if 'Matrix is not positive semi-definite' in str(e):
+                # Add exponentially increasing jitter to the diagonal of each 3x3 matrix
+                jitter = base_jit * (2 ** attempt)
+                jittered_x = x + jitter * identity_matrix
+            else:
+                raise e  # Re-raise if a different error occurs
+
+    raise ValueError("Failed to make matrices invertible after maximum attempts")

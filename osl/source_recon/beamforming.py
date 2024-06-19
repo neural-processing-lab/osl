@@ -917,7 +917,8 @@ def _compute_beamformer(G, Cm, reg, n_orient, weight_norm, pick_ori, reduce_rank
                     np.matmul(Gk.swapaxes(-2, -1).conj(), Cm_inv @ Cm_inv), Gk
                 )
 
-            ori_denom_inv = _sym_inv_sm(ori_denom, reduce_rank, inversion, sk)
+            ori_denom_inv = rhino_utils.jitter_inv(ori_denom, inv_func=_sym_inv_sm,
+                                                   args=(ori_denom, reduce_rank, inversion, sk))
             ori_pick = np.matmul(ori_denom_inv, ori_numer)
 
         # MWW
